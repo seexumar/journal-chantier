@@ -1,0 +1,85 @@
+<!-- journaux/templates/journaux/journal_detail.html -->
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ journal.chantier }} - Journal du {{ journal.date|date:"d/m/Y" }}</title>
+    <link rel="stylesheet" href="{% static 'journaux/style.css' %}">
+</head>
+<body>
+    <header class="topbar">
+        <div>
+            <span class="eyebrow">Détail du rapport</span>
+            <h1>{{ journal.chantier }}</h1>
+        </div>
+        <a href="{% url 'journal-list' %}" style="color: white; text-decoration: none; font-weight: 700; background: rgba(255,255,255,0.15); padding: 9px 18px; border-radius: 999px;">
+            &larr; Retour à la liste
+        </a>
+    </header>
+
+    <main class="container">
+        <section class="panel">
+            <div class="section-title">
+                <div>
+                    <span class="eyebrow">{{ journal.date|date:"l d F Y" }}</span>
+                    <h2>Informations générales</h2>
+                </div>
+                <span class="badge">{{ journal.get_meteo_display }}</span>
+            </div>
+
+            <div class="meta" style="font-size: 15px; margin-bottom: 25px;">
+                <span><strong>Date :</strong> {{ journal.date|date:"d/m/Y" }}</span>
+                <span><strong>Effectif :</strong> {{ journal.effectif }} personne{{ journal.effectif|pluralize }}</span>
+                <span><strong>Météo :</strong> {{ journal.get_meteo_display }}</span>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 20px;">
+                <div class="content">
+                    <strong style="font-size: 16px; color: var(--primary);">Travaux réalisés</strong>
+                    <p style="white-space: pre-line; margin-top: 8px;">{{ journal.travaux_realises }}</p>
+                </div>
+
+                {% if journal.observations %}
+                    <div class="content">
+                        <strong style="font-size: 16px; color: var(--primary);">Observations</strong>
+                        <p style="white-space: pre-line; margin-top: 8px;">{{ journal.observations }}</p>
+                    </div>
+                {% endif %}
+
+                {% if journal.incidents %}
+                    <div class="content" style="background: #fff5f5; border: 1px solid #fed7d7; padding: 15px; border-radius: 10px;">
+                        <strong style="font-size: 16px; color: var(--danger);">Incidents signalés</strong>
+                        <p style="white-space: pre-line; margin-top: 8px; color: var(--danger);">{{ journal.incidents }}</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            {% if journal.photos.all %}
+                <div style="margin-top: 35px;">
+                    <h3 style="margin-bottom: 15px; color: var(--primary);">Photos du chantier ({{ journal.photos.count }})</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px;">
+                        {% for photo in journal.photos.all %}
+                            <div style="background: #fbfcfb; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; box-shadow: var(--shadow);">
+                                <a href="{{ photo.image.url }}" target="_blank" rel="noopener">
+                                    <img src="{{ photo.image.url }}" alt="{{ photo.legende|default:journal.chantier }}" style="width: 100%; height: 200px; object-fit: cover; display: block;">
+                                </a>
+                                {% if photo.legende %}
+                                    <p style="padding: 10px; font-size: 13px; color: var(--muted); margin: 0;">{{ photo.legende }}</p>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+
+            <div style="margin-top: 30px; border-top: 1px solid var(--border); padding-top: 20px;">
+                <a href="{% url 'journal-list' %}" class="detail-link" style="font-size: 15px;">
+                    &larr; Revenir aux journaux de chantier
+                </a>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

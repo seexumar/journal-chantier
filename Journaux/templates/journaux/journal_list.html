@@ -1,0 +1,143 @@
+<!-- journaux/templates/journaux/journal_list.html -->
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Journal de chantier</title>
+    <link rel="stylesheet" href="{% static 'journaux/style.css' %}">
+</head>
+<body>
+    <header class="topbar">
+        <div>
+            <span class="eyebrow">Suivi quotidien</span>
+            <h1>Journal de chantier</h1>
+        </div>
+        <div class="count">{{ journaux|length }} journal{{ journaux|length|pluralize }}</div>
+    </header>
+
+    <main class="container">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="message">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+
+        <section class="panel">
+            <div class="section-title">
+                <div>
+                    <span class="eyebrow">Nouvelle saisie</span>
+                    <h2>Ajouter le rapport du jour</h2>
+                </div>
+            </div>
+
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    <div class="errors">{{ form.non_field_errors }}</div>
+                {% endif %}
+
+                <div class="form-grid">
+                    {% for field in form %}
+                        <div class="field {% if field.name == 'travaux_realises' or field.name == 'observations' or field.name == 'incidents' %}field-wide{% endif %}">
+                            <label for="{{ field.id_for_label }}">
+                                {{ field.label }}
+                            </label>
+                            {{ field }}
+                            {% if field.errors %}
+                                <small class="error">{{ field.errors|striptags }}</small>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <button class="primary-button" type="submit">
+                    Enregistrer le journal
+                </button>
+            </form>
+        </section>
+
+        <section class="records">
+            <div class="section-title">
+                <div>
+                    <span class="eyebrow">Historique</span>
+                    <h2>Journaux enregistrés</h2>
+                </div>
+
+                <form method="get" class="filters">
+                    <input
+                        type="search"
+                        name="recherche"
+                        value="{{ recherche }}"
+                        placeholder="Rechercher un chantier..."
+                    >
+
+                    <select name="meteo">
+                        <option value="">Toutes les météos</option>
+                        <option value="soleil" {% if meteo == "soleil" %}selected{% endif %}>
+                            Ensoleillé
+                        </option>
+                        <option value="nuage" {% if meteo == "nuage" %}selected{% endif %}>
+                            Nuageux
+                        </option>
+                        <option value="pluie" {% if meteo == "pluie" %}selected{% endif %}>
+                            Pluvieux
+                        </option>
+                        <option value="vent" {% if meteo == "vent" %}selected{% endif %}>
+                            Venteux
+                        </option>
+                    </select>
+
+                    <button type="submit">Filtrer</button>
+                </form>
+            </div>
+
+            <div class="journal-grid">
+                {% for journal in journaux %}
+                    <article class="journal-card">
+                        <div class="card-heading">
+                            <div>
+                                <span class="date">
+                                    {{ journal.date|date:"d/m/Y" }}
+                                </span>
+                                <h3>{{ journal.chantier }}</h3>
+                            </div>
+                            <span class="badge">{{ journal.get_meteo_display }}</span>
+                        </div>
+
+                        <div class="meta">
+                            <span>{{ journal.effectif }} personne{{ journal.effectif|pluralize }}</span>
+                            <span>{{ journal.photos.count }} photo{{ journal.photos.count|pluralize }}</span>
+                        </div>
+
+                        <div class="content">
+                            <strong>Travaux réalisés</strong>
+                            <p>{{ journal.travaux_realises|truncatewords:30 }}</p>
+                        </div>
+
+                        {% with premiere_photo=journal.photos.first %}
+                            {% if premiere_photo %}
+                                <img
+                                    class="cover"
+                                    src="{{ premiere_photo.image.url }}"
+                                    alt="Photo du chantier {{ journal.chantier }}"
+                                >
+                            {% endif %}
+                        {% endwith %}
+
+                        <a class="detail-link" href="{% url 'journal-detail' journal.pk %}">
+                            Voir le journal complet
+                        </a>
+                    </article>
+                {% empty %}
+                    <div class="empty-state">
+                        Aucun journal de chantier ne correspond à la recherche.
+                    </div>
+                {% endfor %}
+            </div>
+        </section>
+    </main>
+</body>
+</html>
